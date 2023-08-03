@@ -1,7 +1,7 @@
 # [Air-Bnb]]
 
 ## Database Schema Design
-
+j
 ![db-schema]
 
 [db-schema]: ./images/schema.png

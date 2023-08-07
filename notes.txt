@@ -1,0 +1,28 @@
+npx dotenv sequelize-cli model:generate --name Booking --attributes spotId:integer,userId:integer,startDate:date,endDate:date,createdAt:timestamp,updatedAt:timestamp
+npx dotenv sequelize-cli model:generate --name Review --attributes spotId:integer,userId:integer,review:varchar,stars:int,createdAt:timestamp,updatedAt:timestamp
+npx dotenv sequelize-cli model:generate --name ReviewImages --attributes reviewId:integer,url:varchar,createdAt:timestamp,updatedAt:timestamp
+npx dotenv sequelize-cli model:generate --name Spots --attributes ownerId:integer,address:varchar,city:varchar,state:varchar,country:varchar,lat:decimal,lng:decimal,name:varchar,description:varchar,price:decimal,createdAt:timestamp,updatedAt:timestamp
+npx dotenv sequelize-cli model:generate --name SpotImages --attributes spotId:integer,url:varchar,preview:boolean,createdAt:timestamp,updatedAt:timestamp
+
+One user has many Spots
+Spot belongs to User (foreign Key: ownerId)
+
+Users has many Spots (userId, spotId)
+Bookings join table for Users and Spots with information on booking
+Spots has many Users
+(Many to Many)
+
+Users has many Spots (userId, spotId)
+Reviews join table for Users and Spots with information on Reviews
+Spots has many Users
+(Many to Many)
+
+One Review has many ReviewImages (reviewId, reviewimagesId)
+ReviewImages blongs to One Review
+(One to Many)
+
+One Spot has many SpotImages (spotId, spotimagesId)
+SpotImages belongs to One Spot
+(One to Many)
+
+

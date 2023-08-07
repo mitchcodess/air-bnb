@@ -1,21 +1,24 @@
-npx dotenv sequelize-cli model:generate --name Booking --attributes spotId:integer,userId:integer,startDate:date,endDate:date,createdAt:timestamp,updatedAt:timestamp
-npx dotenv sequelize-cli model:generate --name Review --attributes spotId:integer,userId:integer,review:varchar,stars:int,createdAt:timestamp,updatedAt:timestamp
-npx dotenv sequelize-cli model:generate --name ReviewImages --attributes reviewId:integer,url:varchar,createdAt:timestamp,updatedAt:timestamp
-npx dotenv sequelize-cli model:generate --name Spots --attributes ownerId:integer,address:varchar,city:varchar,state:varchar,country:varchar,lat:decimal,lng:decimal,name:varchar,description:varchar,price:decimal,createdAt:timestamp,updatedAt:timestamp
-npx dotenv sequelize-cli model:generate --name SpotImages --attributes spotId:integer,url:varchar,preview:boolean,createdAt:timestamp,updatedAt:timestamp
+REMEMBER TO INCLUDE OPTIONS IN ALL MIGRATION AND MODEL AND SEEDERS
+INCLUDE FOREIGN AND OTHER KEYS IN ASSOCIATIONS FOR POSTGRE
+WHEN DOING PAGINATION REMEMNBER TO PAARSEINT
+
+npx sequelize-cli model:generate --name Booking --attributes spotId:integer,userId:integer,startDate:date,endDate:date,createdAt:timestamp,updatedAt:timestamp
+npx sequelize-cli model:generate --name Review --attributes spotId:integer,userId:integer,review:varchar,stars:int
+npx sequelize-cli model:generate --name ReviewImages --attributes reviewId:integer,url:string
+npx sequelize-cli model:generate --name Spots --attributes ownerId:integer,address:string,city:string,state:string,country:string,lat:decimal,lng:decimal,name:string,description:string,price:decimal
+npx sequelize-cli model:generate --name SpotImages --attributes spotId:integer,url:string,preview:boolean
 
 One user has many Spots
 Spot belongs to User (foreign Key: ownerId)
 
 Users has many Spots (userId, spotId)
-Bookings join table for Users and Spots with information on booking
 Spots has many Users
-(Many to Many)
+Two One To Many Relationshps
 
 Users has many Spots (userId, spotId)
 Reviews join table for Users and Spots with information on Reviews
 Spots has many Users
-(Many to Many)
+Two One To Many Relationshps
 
 One Review has many ReviewImages (reviewId, reviewimagesId)
 ReviewImages blongs to One Review

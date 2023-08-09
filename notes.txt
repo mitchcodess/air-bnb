@@ -29,3 +29,6 @@ SpotImages belongs to One Spot
 (One to Many)
 
 
+
+How do I ensure the current user is the only one that can delete/edit the spot?
+How do I aggregate avgRating and include preview img

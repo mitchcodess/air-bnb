@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 const { check } = require("express-validator");
 const { handleValidationErrors } = require("../../utils/validation");
 const { setTokenCookie, requireAuth } = require("../../utils/auth");
-const { User, Spot, SpotImage, Review } = require("../../db/models");
+const { User, Spot, SpotImage, Review, Booking } = require("../../db/models");
 const { sequelize } = require("../../db/models");
 const router = express.Router();
 
@@ -20,6 +20,17 @@ router.post("/:spotId/bookings",requireAuth, async (req, res, next) => {
       message: "Forbidden"
     })
   }
+
+  const {startDate, endDate} = req.body;
+
+  
+
+  const newBooking = await Booking.create({
+    spotId: req.params.spotId,
+    userId: req.user.id,
+    startDate,
+    endDate,
+  })
 
 
 });
@@ -314,15 +325,18 @@ router.delete("/:spotId", requireAuth, async (req, res, next) => {
 });
 
 router.get("/", async (req, res, next) => {
-  const spots = await Spot.findAll({
-    include: {
-      model: Review
-    }
-  }
-  );
-
-  res.json({Spots:spots});
-
+//   const spots = await Spot.findAll({
+//     include: [{
+//       model: Review
+//     },
+//    { model: SpotImage}]
+//   }
+//   );
+// for(let i = 0; i < spots.length; i++){
+//     let spot = spots[i]
+//     const avgRating = await 
+// }
+  // res.json({Spots:spots});
 });
 
 

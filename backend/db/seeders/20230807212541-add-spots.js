@@ -44,7 +44,7 @@ module.exports = {
       },
       {
         ownerId: 1,
-        address: '1231 Apple Tr Lane ',
+        address: '1231 Apple Tr Lane',
         city: 'Maint Mouis',
         state: 'MO',
         country: 'US',
@@ -76,10 +76,8 @@ module.exports = {
      * Example:
      * await queryInterface.bulkDelete('People', null, {});
      */
-    await queryInterface.bulkDelete('Spot', null, {
-      where: {
-        address: ['1912 Ford Dr', '1241 Watkins Road']
-      }
+    await queryInterface.bulkDelete('Spots', null, {
+        address: ['1912 Ford Dr', '124124 Carmel Lane','1231 Apple Tr Lane', '1241 Watkins Road']
     })
   }
 };

@@ -47,10 +47,7 @@ module.exports = {
      * Example:
      * await queryInterface.bulkDelete('People', null, {});
      */
-    await queryInterface.bulkDelete('Review', null, {
-      where: {
-        spotId: [2, 1]
-      }
-    });
+    await queryInterface.bulkDelete('Reviews', null, {
+      spotId: [2, 1]});
   }
 };

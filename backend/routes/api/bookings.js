@@ -12,7 +12,7 @@ router.delete('/:bookingId', requireAuth, async (req, res, next) => {
     const booking = await Booking.findByPk(req.params.bookingId);
     const spot = Spot.findOne({
         where: {
-            spotId: booking.spotId
+            id: booking.spotId
         }
     })
     if(booking.userId === req.user.id || spot.ownerId === req.user.id) {
@@ -46,7 +46,22 @@ router.put('/:bookingId', requireAuth, async (req, res, next) => {
 
 // Get all of the Current User's Bookings
 router.get('/current',requireAuth, async (req, res, next) => {
+    const bookings = await Booking.findAll({
+        where: {
+            userId: req.user.id
+        },
+        include: [{
+            model: Spot
+        },
+    ]
+    })
+
+ 
     
+
+    return res.json(bookings)
+
+  
     
 })
 

@@ -18,7 +18,7 @@ module.exports = {
         references: {
           model: 'Reviews'
         },
-        onDelete: "CASCADE",
+        onDelete: 'CASCADE',
         hooks: true
       },
       url: {

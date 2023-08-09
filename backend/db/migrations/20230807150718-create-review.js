@@ -26,7 +26,7 @@ module.exports = {
         references: {
           model: 'Users',
         },
-        onDelete: "CASCADE",
+        onDelete: 'CASCADE',
         hooks: true
       },
       review: {

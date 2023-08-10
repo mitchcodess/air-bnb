@@ -1,9 +1,17 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const { check } = require("express-validator");
+const { query } = require('express-validator');
 const { handleValidationErrors } = require("../../utils/validation");
 const { setTokenCookie, requireAuth } = require("../../utils/auth");
-const { User, Spot, SpotImage, Review, Booking, ReviewImage } = require("../../db/models");
+const {
+  User,
+  Spot,
+  SpotImage,
+  Review,
+  Booking,
+  ReviewImage,
+} = require("../../db/models");
 const { sequelize } = require("../../db/models");
 const router = express.Router();
 
@@ -23,16 +31,114 @@ router.post("/:spotId/bookings", requireAuth, async (req, res, next) => {
 
   const { startDate, endDate } = req.body;
 
+  const startingDate = new Date(startDate);
+  // COMPARED VALUE OF THE BOOKING'S DATE
+  const bookingStart = startingDate.getTime();
+
+  const endingDate = new Date(endDate);
+  // COMPARED VALUE OF THE BOOKING'S DATE
+  const bookingEnd = endingDate.getTime();
+  // Today's Date
+
+  if (bookingEnd < bookingStart) {
+    res.status(400).json({
+      message: "Bad Request",
+      errors: {
+        endDate: "endDate cannot be on or before startDate",
+      },
+    });
+  }
+
+  const bookings = await Booking.findAll({
+    attributes: ["startDate", "endDate"],
+    where: {
+      spotId: req.params.spotId,
+    },
+  });
+
+  let bookingsToJSON = [];
+  for (let i = 0; i < bookings.length; i++) {
+    let booking = bookings[i];
+    let jsonSpot = booking.toJSON();
+    bookingsToJSON.push(jsonSpot);
+  }
+
+  for (let i = 0; i < bookingsToJSON.length; i++) {
+    let bookingStartDate = bookingsToJSON[i];
+    let bookingEndDate = bookingsToJSON[i];
+
+    let startDate = new Date(bookingStartDate.startDate);
+    let endDate = new Date(bookingEndDate.endDate);
+
+    let startDateTime = startDate.getTime();
+    let endDateTime = endDate.getTime();
+    //Comparing bookings startDate with all startDates in the database related to the booking)
+    if (
+      bookingStart === startDateTime ||
+      (bookingStart >= startDateTime && bookingStart <= endDateTime) ||
+      bookingStart === endDateTime
+    ) {
+      return res.status(403).json({
+        message: "Sorry, this spot is already booked for the specified dates",
+        errors: {
+          startDate: "Start date conflicts with an existing booking",
+        },
+      });
+    }
+
+    if (
+      bookingEnd === startDateTime ||
+      (bookingEnd >= startDateTime && bookingStart <= endDateTime) ||
+      bookingEnd === endDateTime
+    ) {
+      return res.status(403).json({
+        message: "Sorry, this spot is already booked for the specified dates",
+        errors: {
+          endDate: "End date conflicts with an existing booking",
+        },
+      });
+    }
+  }
+
   const newBooking = await Booking.create({
     spotId: req.params.spotId,
     userId: req.user.id,
     startDate,
     endDate,
   });
+
+  res.json(newBooking);
 });
 
 // Get all Bookings for a Spot based on the Spot's id
-router.get("/:spotId/bookings", async (req, res, next) => {});
+router.get("/:spotId/bookings", async (req, res, next) => {
+  const spot = await Spot.findByPk(req.params.spotId);
+  if (!spot) {
+    return res.status(404).json({
+      message: "Spot couldn't be found",
+    });
+  }
+  if (spot.ownerId !== req.user.id) {
+    console.log("NOT THE owner!");
+    let bookings = await Booking.findAll({
+      where: {
+        spotId: req.params.spotId,
+      },
+    });
+    return res.json(bookings);
+  } else if (spot.ownerId === req.user.id) {
+    console.log("OWNER!!!");
+    let bookings = await Booking.findAll({
+      where: {
+        spotId: req.params.spotId,
+      },
+      include: {
+        model: User,
+      },
+    });
+    return res.json(bookings);
+  }
+});
 
 // Create a Review for a Spot based on the Spot's id
 
@@ -46,7 +152,11 @@ const validateSpotReview = [
   handleValidationErrors,
 ];
 
-router.post("/:spotId/reviews",validateSpotReview, requireAuth, async (req, res, next) => {
+router.post(
+  "/:spotId/reviews",
+  validateSpotReview,
+  requireAuth,
+  async (req, res, next) => {
     const spot = await Spot.findByPk(req.params.spotId);
     if (!spot) {
       return res.status(404).json({
@@ -96,20 +206,21 @@ router.get("/:spotId/reviews", async (req, res, next) => {
 
   const reviews = await Review.findAll({
     where: {
-      spotId: req.params.spotId
+      spotId: req.params.spotId,
     },
-    include: [{
-      model: User
-    },
-    {
-    model: ReviewImage
-  }]
-  })
+    include: [
+      {
+        model: User,
+      },
+      {
+        model: ReviewImage,
+      },
+    ],
+  });
 
   res.json({
-    Reviews: reviews
-  })
-
+    Reviews: reviews,
+  });
 });
 
 router.post("/:spotId/images", async (req, res, next) => {
@@ -153,17 +264,17 @@ router.get("/current", requireAuth, async (req, res, next) => {
         model: SpotImage,
       },
     ],
-  })
-  
+  });
+
   let spotToJSON = [];
   for (let i = 0; i < spots.length; i++) {
     let spot = spots[i];
     let jsonSpot = spot.toJSON();
     spotToJSON.push(jsonSpot);
   }
-//Return avgRating for each spot
+  //Return avgRating for each spot
   for (let i = 0; i < spotToJSON.length; i++) {
-    let spot = spotToJSON[i]
+    let spot = spotToJSON[i];
     let totalStar = 0;
     let numOfReviews = 0;
     let reviewsOfCurrentSpot = spot.Reviews;
@@ -176,29 +287,25 @@ router.get("/current", requireAuth, async (req, res, next) => {
     delete spot.Reviews;
   }
 
-//Find previewImage for each spot
-for(let i = 0; i < spotToJSON.length; i++) {
+  //Find previewImage for each spot
+  for (let i = 0; i < spotToJSON.length; i++) {
+    let spot = spotToJSON[i];
+    let spotImagesOfCurrentSpot = spot.SpotImages;
 
-  let spot = spotToJSON[i];
-  let spotImagesOfCurrentSpot = spot.SpotImages;
-   
-  for (let j = 0; j < spotImagesOfCurrentSpot.length; j++) {
+    for (let j = 0; j < spotImagesOfCurrentSpot.length; j++) {
       let image = spotImagesOfCurrentSpot[j];
-      if(image.preview === true) {
-          spotToJSON[i].prevewImage = image.url
+      if (image.preview === true) {
+        spotToJSON[i].prevewImage = image.url;
       }
     }
-  if(!spotToJSON[i].prevewImage) {
-    spotToJSON[i].prevewImage = "No preview image found"
+    if (!spotToJSON[i].prevewImage) {
+      spotToJSON[i].prevewImage = "No preview image found";
+    }
+    delete spot.SpotImages;
   }
-  delete spot.SpotImages
-}
-  
-
 
   res.json({
     Spots: spotToJSON,
-
   });
 });
 
@@ -335,7 +442,58 @@ router.delete("/:spotId", requireAuth, async (req, res, next) => {
   });
 });
 
+
+const validateSpotQuery = [
+  query("page")
+  .isInt({min: 1, max: 10})
+  .withMessage("Page must be greater than or equal to 1"),
+  query("size")
+  .isInt({min: 1, max: 20})
+  .withMessage("Size must be greater than or equal to 1"),
+  query("maxLat")
+    .isFloat()
+    .optional()
+    .withMessage("Maximum latitude is invalid"),
+  query("minLat")
+  .isFloat()
+  .optional()
+  .withMessage("Maximum latitude is invalid"),
+  query("maxLng")
+  .isFloat()
+  .optional()
+  .withMessage("Maximum latitude is invalid"),
+  query("minLng")
+  .isFloat()
+  .optional()
+  .withMessage("Maximum latitude is invalid"),
+  query("minPrice")
+    .optional()
+    .isFloat({min: 1})
+    .withMessage("Minimum price must be greater than or equal to 0"),
+  query("Maxprice")
+    .optional()
+    .isFloat({min: 1})
+    .withMessage("Maximum price must be greater than or equal to 0"),
+  handleValidationErrors,
+];
+
+
+
 router.get("/", async (req, res, next) => {
+// let query = {
+//   where: {},
+//   include: []
+// }
+
+// const page = req.query.page === undefined ? 1 : parseInt(req.query.page);
+// const size = req.query.size === undefined ? 20 : parseInt(req.query.size);
+// if (page >= 1 && size >= 1) {
+//     query.limit = size;
+//     query.offset = size * (page - 1);
+// }
+
+
+
   const spots = await Spot.findAll({
     include: [
       {
@@ -351,9 +509,9 @@ router.get("/", async (req, res, next) => {
     let jsonSpot = spot.toJSON();
     spotToJSON.push(jsonSpot);
   }
-//Return avgRating for each spot
+  //Return avgRating for each spot
   for (let i = 0; i < spotToJSON.length; i++) {
-    let spot = spotToJSON[i]
+    let spot = spotToJSON[i];
     let totalStar = 0;
     let numOfReviews = 0;
     let reviewsOfCurrentSpot = spot.Reviews;
@@ -366,34 +524,27 @@ router.get("/", async (req, res, next) => {
     delete spot.Reviews;
   }
 
-//Find previewImage for each spot
-for(let i = 0; i < spotToJSON.length; i++) {
+  //Find previewImage for each spot
+  for (let i = 0; i < spotToJSON.length; i++) {
+    let spot = spotToJSON[i];
+    let spotImagesOfCurrentSpot = spot.SpotImages;
 
-  let spot = spotToJSON[i];
-  let spotImagesOfCurrentSpot = spot.SpotImages;
-   
-  for (let j = 0; j < spotImagesOfCurrentSpot.length; j++) {
+    for (let j = 0; j < spotImagesOfCurrentSpot.length; j++) {
       let image = spotImagesOfCurrentSpot[j];
-      if(image.preview === true) {
-          spotToJSON[i].prevewImage = image.url
+      if (image.preview === true) {
+        spotToJSON[i].prevewImage = image.url;
       }
     }
-  if(!spotToJSON[i].prevewImage) {
-    spotToJSON[i].prevewImage = "No preview image found"
+    if (!spotToJSON[i].prevewImage) {
+      spotToJSON[i].prevewImage = "No preview image found";
+    }
+    delete spot.SpotImages;
   }
-  delete spot.SpotImages
-}
 
-
-
-  res.json(
-    {
-      Spots:spotToJSON
-    });
+  res.json({
+    Spots: spotToJSON,
+  });
 });
-
-
-
 
 router.post("/", validateNewSpot, async (req, res, next) => {
   const { address, city, state, country, lat, lng, name, description, price } =

@@ -13,7 +13,7 @@ module.exports = {
      * }], {});
     */
     await Booking.bulkCreate([{
-      spotId: 4,
+      spotId: 3,
       userId: 1,
       startDate: "2023-8-14",
       endDate: "2023-8-20"
@@ -39,7 +39,7 @@ module.exports = {
      * await queryInterface.bulkDelete('People', null, {});
      */
     await queryInterface.bulkDelete('Bookings', null, {
-      reviewId: [1, 2, 3]
+      spotId: [1, 2, 3]
     })
   }
 };

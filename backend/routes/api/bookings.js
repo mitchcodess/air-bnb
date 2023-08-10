@@ -59,7 +59,11 @@ router.delete("/:bookingId", requireAuth, async (req, res, next) => {
 //Edit a Booking
 router.put("/:bookingId", requireAuth, async (req, res, next) => {
   const booking = await Booking.findByPk(req.params.bookingId);
-  
+  if (!booking) {
+    return res.status(404).json({
+      message: "Booking couldn't be found",
+    });
+  }
     
   if (booking.userId !== req.user.id) {
     return res.status(403).json({
@@ -67,11 +71,7 @@ router.put("/:bookingId", requireAuth, async (req, res, next) => {
     });
   }
 
-  if (!booking) {
-    return res.status(404).json({
-      message: "Booking couldn't be found",
-    });
-  }
+ 
 //TIMES
   const { startDate, endDate } = req.body;
   const startingDate = new Date(startDate);
@@ -155,9 +155,9 @@ router.put("/:bookingId", requireAuth, async (req, res, next) => {
     endDate
   })
 
-res.json({
+res.json(
     editedBooking
-})
+)
   
 });
 

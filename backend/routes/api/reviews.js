@@ -46,9 +46,9 @@ router.post("/:reviewId/images", requireAuth, async (req, res, next) => {
     url
   });
 
-  res.json({
-    addedImage,
-  });
+  res.json(
+    addedImage
+  );
 });
 
 const validateSpotReview = [

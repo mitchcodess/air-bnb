@@ -122,7 +122,8 @@ router.get("/current", requireAuth, async (req, res, next) => {
             model: User
         },
         {
-            model: Spot
+            model: Spot,
+            include:{model: SpotImage}
         },
         
         {
@@ -131,9 +132,33 @@ router.get("/current", requireAuth, async (req, res, next) => {
     ]
   });
 
-res.json({
-    Reviews: reviews
-})
+  let reviewsToJSON = [];
+  for (let i = 0; i < reviews.length; i++) {
+    let currentReview = reviews[i];
+    let jsonReview = currentReview.toJSON();
+    reviewsToJSON.push(jsonReview);
+  }
+  for (let i = 0; i < reviewsToJSON.length; i++) {
+    let review = reviewsToJSON[i];
+    let spotImagesOfCurrentReview = review.Spot.SpotImages;
+
+    for (let j = 0; j < spotImagesOfCurrentReview.length; j++) {
+      let image = spotImagesOfCurrentReview[j];
+      if (image.preview === true) {
+        reviewsToJSON[i].Spot.previewImage = image.url;
+      }
+    }
+    if (!reviewsToJSON[i].Spot.previewImage) {
+      reviewsToJSON[i].Spot.previewImage = "No preview image found";
+    }
+    delete review.Spot.SpotImages;
+  }
+
+  console.log(reviewsToJSON[0].Spot)
+
+res.json(
+    reviewsToJSON
+)
 });
 
 module.exports = router;

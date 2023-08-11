@@ -14,6 +14,7 @@ const {
 } = require("../../db/models");
 const { sequelize } = require("../../db/models");
 const router = express.Router();
+const { Op } = require("sequelize");
 
 // Create a Booking from a Spot based on the Spot's id
 router.post("/:spotId/bookings", requireAuth, async (req, res, next) => {
@@ -445,63 +446,92 @@ router.delete("/:spotId", requireAuth, async (req, res, next) => {
 
 const validateSpotQuery = [
   query("page")
+  .default(1)
   .isInt({min: 1, max: 10})
   .withMessage("Page must be greater than or equal to 1"),
   query("size")
+  .default(20)
   .isInt({min: 1, max: 20})
-  .withMessage("Size must be greater than or equal to 1"),
+  .withMessage("Size must be greater than or equal to 1")
+  ,
   query("maxLat")
     .isFloat()
-    .optional()
+    .optional({ nullable: true, checkFalsy: true })
     .withMessage("Maximum latitude is invalid"),
   query("minLat")
+  
   .isFloat()
-  .optional()
+  .optional({ nullable: true, checkFalsy: true })
   .withMessage("Maximum latitude is invalid"),
   query("maxLng")
   .isFloat()
-  .optional()
+  .optional({ nullable: true, checkFalsy: true })
   .withMessage("Maximum latitude is invalid"),
   query("minLng")
   .isFloat()
-  .optional()
+  .optional({ nullable: true, checkFalsy: true })
   .withMessage("Maximum latitude is invalid"),
   query("minPrice")
-    .optional()
-    .isFloat({min: 1})
+    .isFloat({min: 0})
+    .optional({ nullable: true, checkFalsy: true })
     .withMessage("Minimum price must be greater than or equal to 0"),
-  query("Maxprice")
-    .optional()
-    .isFloat({min: 1})
+  query("maxPrice")
+    .isFloat({min: 0})
+    .optional({ nullable: true, checkFalsy: true })
     .withMessage("Maximum price must be greater than or equal to 0"),
   handleValidationErrors,
 ];
 
 
 
-router.get("/", async (req, res, next) => {
-// let query = {
-//   where: {},
-//   include: []
-// }
+router.get("/", validateSpotQuery, async (req, res, next) => {
+let query = {
+  where: {},
+  include: []
+}
 
-// const page = req.query.page === undefined ? 1 : parseInt(req.query.page);
-// const size = req.query.size === undefined ? 20 : parseInt(req.query.size);
-// if (page >= 1 && size >= 1) {
-//     query.limit = size;
-//     query.offset = size * (page - 1);
-// }
+const page = parseInt(req.query.page);
+const size = parseInt(req.query.size);
+
+if (page >= 1 && size >= 1) {
+    query.limit = size;
+    query.offset = size * (page - 1);
+}
+
+query.include.push({
+  model: Review,
+},
+{
+  model: SpotImage
+})
+
+if (req.query.maxLat) {
+  query.where.lat = req.query.maxLat;
+  query.where.lat = { [Op.lt]: `${req.query.maxLat}`}
+}
+if (req.query.minLat) {
+  query.where.lat = req.query.minLat;
+  query.where.lat = { [Op.gt]: `${req.query.minLat}`}
+}
+if (req.query.maxLng) {
+  query.where.lng = req.query.maxLng;
+  query.where.lng = { [Op.lt]: `${req.query.maxLng}`}
+}
+if (req.query.minLng) {
+  query.where.lng = req.query.minLng;
+  query.where.lng = { [Op.gt]: `${req.query.minLng}`}
+}
+if (req.query.maxPrice) {
+  query.where.price = req.query.maxPrice;
+  query.where.price = { [Op.lt]: `${req.query.maxPrice}`}
+}
+if (req.query.minPrice) {
+  query.where.price = req.query.minPrice;
+  query.where.price = { [Op.gt]: `${req.query.minPrice}`}
+}
 
 
-
-  const spots = await Spot.findAll({
-    include: [
-      {
-        model: Review,
-      },
-      { model: SpotImage },
-    ],
-  });
+  const spots = await Spot.findAll(query);
 
   let spotToJSON = [];
   for (let i = 0; i < spots.length; i++) {
@@ -543,6 +573,8 @@ router.get("/", async (req, res, next) => {
 
   res.json({
     Spots: spotToJSON,
+    page,
+    size
   });
 });
 

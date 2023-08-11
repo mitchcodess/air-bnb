@@ -505,30 +505,39 @@ query.include.push({
   model: SpotImage
 })
 
-if (req.query.maxLat) {
-  query.where.lat = req.query.maxLat;
+
+if(req.query.maxLat && req.query.minLat) {
+  query.where.lat = { [Op.lt]: `${req.query.maxLat}`, [Op.gt]: `${req.query.minLat}`};
+}
+else if (req.query.maxLat) {
   query.where.lat = { [Op.lt]: `${req.query.maxLat}`}
 }
-if (req.query.minLat) {
-  query.where.lat = req.query.minLat;
+else if (req.query.minLat) {
   query.where.lat = { [Op.gt]: `${req.query.minLat}`}
 }
-if (req.query.maxLng) {
-  query.where.lng = req.query.maxLng;
+
+
+
+if(req.query.maxLng && req.query.minLng) {
+  query.where.lng = { [Op.lt]: `${req.query.maxLng}`, [Op.gt]: `${req.query.minLng}`}
+}
+else if (req.query.maxLng) {
   query.where.lng = { [Op.lt]: `${req.query.maxLng}`}
 }
-if (req.query.minLng) {
-  query.where.lng = req.query.minLng;
+else if (req.query.minLng) {
   query.where.lng = { [Op.gt]: `${req.query.minLng}`}
 }
-if (req.query.maxPrice) {
-  query.where.price = req.query.maxPrice;
+
+if(req.query.maxPrice && req.query.minPrice) {
+  query.where.price = { [Op.lt]: `${req.query.maxPrice}`, [Op.gt]: `${req.query.minPrice}`}
+}
+else if (req.query.maxPrice) {
   query.where.price = { [Op.lt]: `${req.query.maxPrice}`}
 }
-if (req.query.minPrice) {
-  query.where.price = req.query.minPrice;
+else if (req.query.minPrice) {
   query.where.price = { [Op.gt]: `${req.query.minPrice}`}
 }
+
 
 
   const spots = await Spot.findAll(query);

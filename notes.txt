@@ -1,0 +1,34 @@
+REMEMBER TO INCLUDE OPTIONS IN ALL MIGRATION AND MODEL AND SEEDERS
+INCLUDE FOREIGN AND OTHER KEYS IN ASSOCIATIONS FOR POSTGRE
+WHEN DOING PAGINATION REMEMNBER TO PAARSEINT
+
+npx sequelize-cli model:generate --name Booking --attributes spotId:integer,userId:integer,startDate:date,endDate:date,createdAt:timestamp,updatedAt:timestamp
+npx sequelize-cli model:generate --name Review --attributes spotId:integer,userId:integer,review:varchar,stars:int
+npx sequelize-cli model:generate --name ReviewImages --attributes reviewId:integer,url:string
+npx sequelize-cli model:generate --name Spots --attributes ownerId:integer,address:string,city:string,state:string,country:string,lat:decimal,lng:decimal,name:string,description:string,price:decimal
+npx sequelize-cli model:generate --name SpotImages --attributes spotId:integer,url:string,preview:boolean
+
+One user has many Spots
+Spot belongs to User (foreign Key: ownerId)
+
+Users has many Spots (userId, spotId)
+Spots has many Users
+Two One To Many Relationshps
+
+Users has many Spots (userId, spotId)
+Reviews join table for Users and Spots with information on Reviews
+Spots has many Users
+Two One To Many Relationshps
+
+One Review has many ReviewImages (reviewId, reviewimagesId)
+ReviewImages blongs to One Review
+(One to Many)
+
+One Spot has many SpotImages (spotId, spotimagesId)
+SpotImages belongs to One Spot
+(One to Many)
+
+
+
+How do I ensure the current user is the only one that can delete/edit the spot?
+How do I aggregate avgRating and include preview img
